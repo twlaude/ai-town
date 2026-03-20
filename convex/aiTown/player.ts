@@ -246,6 +246,11 @@ export class Player {
       conversation.stop(game, now);
     }
     game.world.players.delete(this.id);
+    const playerDescription = game.playerDescriptions.get(this.id);
+    if (playerDescription) {
+      playerDescription.gone = true;
+      game.descriptionsModified = true;
+    }
   }
 
   serialize(): SerializedPlayer {

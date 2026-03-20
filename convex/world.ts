@@ -130,7 +130,7 @@ export const joinWorld = mutation({
     return await insertInput(ctx, world._id, 'join', {
       name,
       character: characters[Math.floor(Math.random() * characters.length)].name,
-      description: `${identity.givenName} is a human player`,
+      description: `${name} is a human player`,
       tokenIdentifier,
     });
   },
@@ -206,9 +206,8 @@ export const gameDescriptions = query({
   handler: async (ctx, args) => {
     const playerDescriptions = await ctx.db
       .query('playerDescriptions')
-      .withIndex('worldId', (q) => q.eq('worldId', args.worldId))
-      .order('desc')
-      .take(1000);
+      .withIndex('worldId_gone', (q) => q.eq('worldId', args.worldId).lt('gone', true))
+      .collect();
     const agentDescriptions = await ctx.db
       .query('agentDescriptions')
       .withIndex('worldId', (q) => q.eq('worldId', args.worldId))
