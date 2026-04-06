@@ -4,7 +4,7 @@ const OPENAI_EMBEDDING_DIMENSION = 1536;
 const TOGETHER_EMBEDDING_DIMENSION = 768;
 const OLLAMA_EMBEDDING_DIMENSION = 1024;
 
-export const EMBEDDING_DIMENSION: number = OLLAMA_EMBEDDING_DIMENSION;
+export const EMBEDDING_DIMENSION: number = OPENAI_EMBEDDING_DIMENSION;
 
 export function detectMismatchedLLMProvider() {
   switch (EMBEDDING_DIMENSION) {
@@ -37,6 +37,7 @@ export function detectMismatchedLLMProvider() {
 export interface LLMConfig {
   provider: 'openai' | 'together' | 'ollama' | 'custom';
   url: string; // Should not have a trailing slash
+  chatUrl?: string; // Optional: separate URL for chat (proxy)
   chatModel: string;
   embeddingModel: string;
   stopWords: string[];
@@ -44,6 +45,18 @@ export interface LLMConfig {
 }
 
 export function getLLMConfig(): LLMConfig {
+  // Hybrid mode: chat via Codex proxy, embeddings via OpenAI API
+  if (process.env.CHAT_PROXY_URL) {
+    return {
+      provider: 'openai',
+      url: 'https://api.openai.com',
+      chatUrl: process.env.CHAT_PROXY_URL, // chat goes to Codex proxy
+      chatModel: process.env.CHAT_PROXY_MODEL ?? 'gpt-5.4',
+      embeddingModel: 'text-embedding-3-small',
+      stopWords: [],
+      apiKey: process.env.OPENAI_API_KEY,
+    };
+  }
   let provider = process.env.LLM_PROVIDER;
   if (provider ? provider === 'openai' : process.env.OPENAI_API_KEY) {
     if (EMBEDDING_DIMENSION !== OPENAI_EMBEDDING_DIMENSION) {
@@ -88,7 +101,7 @@ export function getLLMConfig(): LLMConfig {
       apiKey,
     };
   }
-  // Assume Ollama
+  // Assume Ollama (fallback)
   if (EMBEDDING_DIMENSION !== OLLAMA_EMBEDDING_DIMENSION) {
     detectMismatchedLLMProvider();
     throw new Error(
@@ -96,9 +109,6 @@ export function getLLMConfig(): LLMConfig {
         `. See convex/util/llm.ts for details.`,
     );
   }
-  // Alternative embedding model:
-  // embeddingModel: 'llama3'
-  // const OLLAMA_EMBEDDING_DIMENSION = 4096,
   return {
     provider: 'ollama',
     url: process.env.OLLAMA_HOST ?? 'http://127.0.0.1:11434',
@@ -147,7 +157,8 @@ export async function chatCompletion(
     retries,
     ms,
   } = await retryWithBackoff(async () => {
-    const result = await fetch(config.url + '/v1/chat/completions', {
+    const chatBaseUrl = config.chatUrl ?? config.url;
+    const result = await fetch(chatBaseUrl + '/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

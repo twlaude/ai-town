@@ -18,7 +18,7 @@ import { startConversationMessage } from './agent/conversation';
 import { GameId } from './aiTown/ids';
 
 // Clear all of the tables except for the embeddings cache.
-const excludedTables: Array<TableNames> = ['embeddingsCache'];
+const excludedTables: Array<TableNames> = []; // wipe everything including embeddings cache
 
 export const wipeAllTables = internalMutation({
   handler: async (ctx) => {
@@ -162,6 +162,27 @@ export const randomPositions = internalMutation({
         destination: {
           x: 1 + Math.floor(Math.random() * (map.width - 2)),
           y: 1 + Math.floor(Math.random() * (map.height - 2)),
+        },
+      });
+    }
+  },
+});
+
+export const teleportTogether = mutation({
+  handler: async (ctx) => {
+    const { worldStatus } = await getDefaultWorld(ctx.db);
+    const world = await ctx.db.get(worldStatus.worldId);
+    if (!world) {
+      throw new Error(`No world`);
+    }
+    // Move all players to exact same spot
+    for (let i = 0; i < world.players.length; i++) {
+      const player = world.players[i];
+      await insertInput(ctx, world._id, 'moveTo', {
+        playerId: player.id,
+        destination: {
+          x: 32 + i,
+          y: 25,
         },
       });
     }

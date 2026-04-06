@@ -1,4 +1,4 @@
-export const ACTION_TIMEOUT = 120_000; // more time for local dev
+export const ACTION_TIMEOUT = 300_000; // 5min for GPT-5.4 proxy
 // export const ACTION_TIMEOUT = 60_000;// normally fine
 
 export const IDLE_WORLD_TIMEOUT = 5 * 60 * 1000;
@@ -10,8 +10,8 @@ export const STEP_INTERVAL = 1000;
 
 export const PATHFINDING_TIMEOUT = 60 * 1000;
 export const PATHFINDING_BACKOFF = 1000;
-export const CONVERSATION_DISTANCE = 1.3;
-export const MIDPOINT_THRESHOLD = 4;
+export const CONVERSATION_DISTANCE = 3.0; // wider range so agents talk more easily
+export const MIDPOINT_THRESHOLD = 8;
 export const TYPING_TIMEOUT = 15 * 1000;
 export const COLLISION_THRESHOLD = 0.75;
 
@@ -34,7 +34,7 @@ export const INVITE_ACCEPT_PROBABILITY = 0.8;
 export const INVITE_TIMEOUT = 60000;
 
 // Wait for another player to say something before jumping in.
-export const AWKWARD_CONVERSATION_TIMEOUT = 60_000; // more time locally
+export const AWKWARD_CONVERSATION_TIMEOUT = 180_000; // 3min for GPT-5.4 via proxy
 // export const AWKWARD_CONVERSATION_TIMEOUT = 20_000;
 
 // Leave a conversation after participating too long.

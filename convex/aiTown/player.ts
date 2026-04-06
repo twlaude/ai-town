@@ -189,9 +189,13 @@ export class Player {
     }
     let position;
     for (let attempt = 0; attempt < 10; attempt++) {
+      // Spawn in center 1/4 of the map so agents are close together
+      const cx = Math.floor(game.worldMap.width / 2);
+      const cy = Math.floor(game.worldMap.height / 2);
+      const range = 5;
       const candidate = {
-        x: Math.floor(Math.random() * game.worldMap.width),
-        y: Math.floor(Math.random() * game.worldMap.height),
+        x: cx - range + Math.floor(Math.random() * range * 2),
+        y: cy - range + Math.floor(Math.random() * range * 2),
       };
       if (blocked(game, now, candidate)) {
         continue;
